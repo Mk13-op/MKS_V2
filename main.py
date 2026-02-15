@@ -1,27 +1,36 @@
 import os
+import asyncio
 from dotenv import load_dotenv
-import initialize_db  # Connecting the Data Layer
-# import test_engine   # Connecting the Logic Layer (Keep commented until ready)
+import initialize_db
+import test_engine 
 
-# Load the "Shield" (Secrets)
-load_dotenv()
+load_dotenv(override=True)
 
-def bootstrap():
-    """Ensure the system is ready to run."""
+async def bootstrap():
     print("--- MKS_V2 System Bootstrapping ---")
-    
-    # 1. Initialize the Database (The Memory)
-    # This calls the function inside initialize_db.py
     initialize_db.setup_database()
     
-    print("[SUCCESS] Environment, Secrets, and Database loaded.")
+    fmp_key = os.getenv("FMP_API_KEY") 
+    if fmp_key:
+        print("[SUCCESS] API Key detected and loaded.")
+    else:
+        print("[WARNING] API Key not found in .env!")
+    
+    print("[SUCCESS] Environment and Database ready.")
 
-def run_engine():
-    """Triggers the core logic of the system."""
-    print("--- Starting Execution Engine ---")
-    # This is where we will call your test_engine.run() logic soon
-    pass
+async def run_system():
+    # The Live Watchlist
+    watchlist = ["NVDA", "AAPL", "MSFT", "TSLA", "PLTR"]
+    
+    # 1. Fetch live data
+    live_data = await test_engine.fetch_market_data(watchlist)
+    
+    # 2. Analyze live data
+    test_engine.run_analysis(live_data)
 
 if __name__ == "__main__":
-    bootstrap()
-    run_engine()
+    async def start():
+        await bootstrap()
+        await run_system()
+
+    asyncio.run(start())
